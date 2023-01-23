@@ -2,7 +2,7 @@ package dev.gegy.colored_lights.render;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.renderer.LightTexture;
 
 public final class ColoredLightEntityRenderContext {
     private static final ColoredLightEntityRenderContext INSTANCE = new ColoredLightEntityRenderContext();
@@ -21,8 +21,8 @@ public final class ColoredLightEntityRenderContext {
     }
     
     public float getLightColorFactor(int light) {
-        float blockLight = LightmapTextureManager.getBlockLightCoordinates(light) / 15.0F;
-        float skyLight = LightmapTextureManager.getSkyLightCoordinates(light) / 15.0F;
+        float blockLight = LightTexture.block(light) / 15.0F;
+        float skyLight = LightTexture.sky(light) / 15.0F;
         skyLight *= this.skyBrightness;
         
         return blockLight * (1.0F - skyLight);

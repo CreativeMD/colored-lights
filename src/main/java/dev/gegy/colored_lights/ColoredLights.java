@@ -11,7 +11,7 @@ import dev.gegy.colored_lights.resource.shader.ShaderPatch;
 import dev.gegy.colored_lights.resource.shader.ShaderPatchManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.packs.PackType;
 
 public final class ColoredLights implements ModInitializer {
     public static final String ID = "colored_lights";
@@ -21,7 +21,7 @@ public final class ColoredLights implements ModInitializer {
     
     @Override
     public void onInitialize() {
-        var resources = ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES);
+        var resources = ResourceManagerHelper.get(PackType.CLIENT_RESOURCES);
         
         var colors = new BlockLightColorMap();
         BlockLightColors.registerProvider(colors);

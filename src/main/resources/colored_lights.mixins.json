@@ -5,17 +5,17 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [],
   "client": [
-    "chunk.ChunkSectionMixin",
-    "render.WorldRendererMixin",
-    "render.chunk.BuiltChunkMixin",
-    "render.chunk.BuiltChunkStorageAccess",
+    "chunk.LevelChunkSectionMixin",
+    "render.LevelRendererMixin",
+    "render.chunk.RenderChunkMixin",
+    "render.chunk.ViewAreaAccess",
     "render.entity.BlockEntityRenderDispatcherMixin",
-    "render.entity.BlockModelRendererMixin",
+    "render.entity.ModelBlockRendererMixin",
     "render.entity.ItemRendererMixin",
     "render.entity.ModelPartMixin",
-    "render.particle.ParticleManagerMixin",
-    "resource.ResourceImplMixin",
-    "shader.ShaderMixin"
+    "render.particle.ParticleEngineMixin",
+    "resource.SimpleResourceMixin",
+    "shader.ShaderInstanceMixin"
   ],
   "injectors": {
     "defaultRequire": 1

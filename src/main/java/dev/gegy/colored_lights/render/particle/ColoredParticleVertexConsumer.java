@@ -2,7 +2,7 @@ package dev.gegy.colored_lights.render.particle;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public final class ColoredParticleVertexConsumer implements VertexConsumer, AutoCloseable {
     private VertexConsumer parent;
@@ -54,20 +54,20 @@ public final class ColoredParticleVertexConsumer implements VertexConsumer, Auto
     }
     
     @Override
-    public VertexConsumer light(int block, int sky) {
+    public VertexConsumer uv2(int block, int sky) {
         if (block > 0 && sky < 255 && this.skyLight < 1.0F) {
             float blockFactor = block / 255.0F;
             float skyFactor = (sky / 255.0F) * this.skyLight;
             float lightFactor = blockFactor * (1.0F - skyFactor);
             if (lightFactor > 1e-3f) {
-                this.red *= MathHelper.lerp(lightFactor, 1.0F, this.redLight);
-                this.green *= MathHelper.lerp(lightFactor, 1.0F, this.greenLight);
-                this.blue *= MathHelper.lerp(lightFactor, 1.0F, this.blueLight);
+                this.red *= Mth.lerp(lightFactor, 1.0F, this.redLight);
+                this.green *= Mth.lerp(lightFactor, 1.0F, this.greenLight);
+                this.blue *= Mth.lerp(lightFactor, 1.0F, this.blueLight);
             }
         }
         
         this.flushColor();
-        this.parent.light(block, sky);
+        this.parent.uv2(block, sky);
         
         return this;
     }
@@ -80,16 +80,16 @@ public final class ColoredParticleVertexConsumer implements VertexConsumer, Auto
     }
     
     @Override
-    public VertexConsumer texture(float u, float v) {
+    public VertexConsumer uv(float u, float v) {
         this.flushColor();
-        this.parent.texture(u, v);
+        this.parent.uv(u, v);
         return this;
     }
     
     @Override
-    public VertexConsumer overlay(int u, int v) {
+    public VertexConsumer overlayCoords(int u, int v) {
         this.flushColor();
-        this.parent.overlay(u, v);
+        this.parent.overlayCoords(u, v);
         return this;
     }
     
@@ -101,18 +101,18 @@ public final class ColoredParticleVertexConsumer implements VertexConsumer, Auto
     }
     
     @Override
-    public void next() {
+    public void endVertex() {
         this.flushColor();
-        this.parent.next();
+        this.parent.endVertex();
     }
     
     @Override
-    public void fixedColor(int red, int green, int blue, int alpha) {
-        this.parent.fixedColor(red, green, blue, alpha);
+    public void defaultColor(int red, int green, int blue, int alpha) {
+        this.parent.defaultColor(red, green, blue, alpha);
     }
     
     @Override
-    public void unfixColor() {
-        this.parent.unfixColor();
+    public void unsetDefaultColor() {
+        this.parent.unsetDefaultColor();
     }
 }

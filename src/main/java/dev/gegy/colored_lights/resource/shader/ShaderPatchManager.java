@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.shaders.Program;
+import com.mojang.blaze3d.shaders.Shader;
+import com.mojang.blaze3d.shaders.Uniform;
 
 import dev.gegy.colored_lights.resource.ResourcePatchManager;
-import net.minecraft.client.gl.GlShader;
-import net.minecraft.client.gl.GlUniform;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class ShaderPatchManager {
     public static final ShaderPatchManager INSTANCE = new ShaderPatchManager();
@@ -32,7 +32,7 @@ public final class ShaderPatchManager {
     }
     
     private void addResourcePatch(String shader, ShaderPatch patch, Program.Type type) {
-        var location = new Identifier("shaders/core/" + shader + type.getFileExtension());
+        var location = new ResourceLocation("shaders/core/" + shader + type.getExtension());
         
         ResourcePatchManager.INSTANCE.add(location, bytes -> {
             String source = new String(bytes, StandardCharsets.UTF_8);
@@ -50,7 +50,7 @@ public final class ShaderPatchManager {
         INSTANCE.activePatches.remove();
     }
     
-    public static void applyUniformPatches(GlShader shader, BiConsumer<PatchedUniform, GlUniform> consumer) {
+    public static void applyUniformPatches(Shader shader, BiConsumer<PatchedUniform, Uniform> consumer) {
         var activePatches = getActivePatches();
         if (activePatches != null) {
             for (ShaderPatch patch : activePatches) {

@@ -6,32 +6,31 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.mojang.authlib.minecraft.client.MinecraftClient;
-
 import dev.gegy.colored_lights.ColoredLightCorner;
 import dev.gegy.colored_lights.ColoredLightPacking;
 import dev.gegy.colored_lights.render.ColoredLightBuiltChunk;
-import dev.gegy.colored_lights.render.ColoredLightWorldRenderer;
-import net.minecraft.client.render.chunk.ChunkBuilder;
+import dev.gegy.colored_lights.render.ColoredLightLevelRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher.RenderChunk;
 
-@Mixin(ChunkBuilder.BuiltChunk.class)
-public class BuiltChunkMixin implements ColoredLightBuiltChunk {
+@Mixin(RenderChunk.class)
+public class RenderChunkMixin implements ColoredLightBuiltChunk {
     private int chunkLightGeneration = -1;
     private ColoredLightCorner[] chunkLightColors;
     private long packedChunkLightColors = 0;
     
-    @Inject(method = "clear", at = @At("HEAD"))
+    @Inject(method = "clear", at = @At("HEAD"), require = 1)
     private void clear(CallbackInfo ci) {
         this.updateChunkLight(-1, null);
     }
     
-    @Inject(method = "cancelRebuild", at = @At("HEAD"))
+    @Inject(method = "cancelRebuild", at = @At("HEAD"), require = 1)
     private void cancelRebuild(CallbackInfo ci) {
-        var client = MinecraftClient.getInstance();
-        var worldRenderer = (ColoredLightWorldRenderer) client.worldRenderer;
+        var client = Minecraft.getInstance();
+        var worldRenderer = (ColoredLightLevelRenderer) client.levelRenderer;
         var colorUpdater = worldRenderer.getChunkLightColorUpdater();
         
-        colorUpdater.updateChunk(client.world, (ChunkBuilder.BuiltChunk) (Object) this);
+        colorUpdater.updateChunk(client.level, (RenderChunk) (Object) this);
     }
     
     @Override

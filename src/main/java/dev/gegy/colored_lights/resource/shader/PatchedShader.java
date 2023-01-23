@@ -2,9 +2,9 @@ package dev.gegy.colored_lights.resource.shader;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.gl.GlUniform;
+import com.mojang.blaze3d.shaders.Uniform;
 
 public interface PatchedShader {
     @Nullable
-    GlUniform getPatchedUniform(PatchedUniform uniform);
+    Uniform getPatchedUniform(PatchedUniform uniform);
 }

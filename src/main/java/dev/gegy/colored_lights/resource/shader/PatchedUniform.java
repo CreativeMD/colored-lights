@@ -5,16 +5,14 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.blaze3d.shaders.Shader;
-
-import net.minecraft.client.gl.GlShader;
-import net.minecraft.client.gl.GlUniform;
+import com.mojang.blaze3d.shaders.Uniform;
 
 public final class PatchedUniform {
     final String name;
     final Type type;
-    final Consumer<GlUniform> reset;
+    final Consumer<Uniform> reset;
     
-    PatchedUniform(String name, Type type, Consumer<GlUniform> reset) {
+    PatchedUniform(String name, Type type, Consumer<Uniform> reset) {
         this.name = name;
         this.type = type;
         this.reset = reset;
@@ -37,23 +35,23 @@ public final class PatchedUniform {
     }
     
     @Nullable
-    public GlUniform get(Shader shader) {
+    public Uniform get(Shader shader) {
         if (shader instanceof PatchedShader patchedShader) {
             return patchedShader.getPatchedUniform(this);
         }
         return null;
     }
     
-    public GlUniform toGlUniform(GlShader shader) {
-        var uniform = new GlUniform(this.name, this.type.glType, this.type.count, shader);
+    public Uniform toGlUniform(Shader shader) {
+        var uniform = new Uniform(this.name, this.type.glType, this.type.count, shader);
         this.reset.accept(uniform);
         return uniform;
     }
     
     public enum Type {
-        INT(GlUniform.field_32038, "int", 1),
-        FLOAT(GlUniform.field_32042, "float", 1),
-        INT2(GlUniform.field_32039, "ivec2", 2);
+        INT(Uniform.UT_INT1, "int", 1),
+        FLOAT(Uniform.UT_FLOAT1, "float", 1),
+        INT2(Uniform.UT_INT2, "ivec2", 2);
         
         public final int glType;
         public final String glslType;

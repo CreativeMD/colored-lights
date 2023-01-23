@@ -1,8 +1,9 @@
 package dev.gegy.colored_lights;
 
+import com.mojang.math.Vector3f;
+
 import dev.gegy.colored_lights.provider.BlockLightColors;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.Mth;
 
 public final class ColoredLightPacking {
     public static final int DEFAULT = 0;
@@ -15,7 +16,7 @@ public final class ColoredLightPacking {
     private static final int HUES_PER_SATURATION_LEVEL = (COLOR_COUNT - 1) / (SATURATION_LEVELS - 1);
     
     public static int pack(float hue, float saturation) {
-        int saturationLevel = MathHelper.floor(saturation * SATURATION_LEVELS);
+        int saturationLevel = Mth.floor(saturation * SATURATION_LEVELS);
         saturationLevel = Math.min(saturationLevel, SATURATION_LEVELS - 1);
         
         if (saturationLevel <= 0) {
@@ -46,7 +47,7 @@ public final class ColoredLightPacking {
         return pack(hue, saturation);
     }
     
-    public static Vec3f unpack(int packed) {
+    public static Vector3f unpack(int packed) {
         // we use a value of 0 to represent saturation=0, given hue is irrelevant here.
         if (packed == 0) {
             return BlockLightColors.WHITE;
@@ -56,15 +57,15 @@ public final class ColoredLightPacking {
         
         int saturationLevel = (color / HUES_PER_SATURATION_LEVEL) + 1;
         
-        float hue = MathHelper.fractionalPart((float) color / HUES_PER_SATURATION_LEVEL);
+        float hue = Mth.frac((float) color / HUES_PER_SATURATION_LEVEL);
         float saturation = (float) saturationLevel / (SATURATION_LEVELS - 1);
         
-        float px = Math.abs(MathHelper.fractionalPart(hue + 1.0F) * 6.0F - 3.0F);
-        float py = Math.abs(MathHelper.fractionalPart(hue + 2.0F / 3.0F) * 6.0F - 3.0F);
-        float pz = Math.abs(MathHelper.fractionalPart(hue + 1.0F / 3.0F) * 6.0F - 3.0F);
+        float px = Math.abs(Mth.frac(hue + 1.0F) * 6.0F - 3.0F);
+        float py = Math.abs(Mth.frac(hue + 2.0F / 3.0F) * 6.0F - 3.0F);
+        float pz = Math.abs(Mth.frac(hue + 1.0F / 3.0F) * 6.0F - 3.0F);
         
-        return new Vec3f(MathHelper.lerp(saturation, 1.0F, MathHelper.clamp(px - 1.0F, 0.0F, 1.0F)), MathHelper
-                .lerp(saturation, 1.0F, MathHelper.clamp(py - 1.0F, 0.0F, 1.0F)), MathHelper.lerp(saturation, 1.0F, MathHelper.clamp(pz - 1.0F, 0.0F, 1.0F)));
+        return new Vector3f(Mth.lerp(saturation, 1.0F, Mth.clamp(px - 1.0F, 0.0F, 1.0F)), Mth.lerp(saturation, 1.0F, Mth.clamp(py - 1.0F, 0.0F, 1.0F)), Mth
+                .lerp(saturation, 1.0F, Mth.clamp(pz - 1.0F, 0.0F, 1.0F)));
     }
     
     public static long pack(ColoredLightCorner[] corners) {

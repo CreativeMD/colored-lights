@@ -6,10 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.gegy.colored_lights.ColoredLightValue;
 import dev.gegy.colored_lights.provider.BlockLightColors;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 
 public final class ChunkColoredLightSampler {
     private static final int OCTANT_COUNT = 2;
@@ -32,7 +33,7 @@ public final class ChunkColoredLightSampler {
         return index(x, y, z, OCTANT_COUNT);
     }
     
-    public static ColoredLightValue[] sampleCorners(WorldView world, ChunkSectionPos sectionPos, ChunkSection section) {
+    public static ColoredLightValue[] sampleCorners(LevelAccessor world, SectionPos sectionPos, LevelChunkSection section) {
         // To properly weight lights, we would need to sample across the neighbor chunks and compute color per block
         // before summing all together. This is too expensive for our compromise solution, so instead we just sample
         // within this chunk at a lower resolution.
@@ -76,26 +77,26 @@ public final class ChunkColoredLightSampler {
     }
     
     @Nullable
-    private static ColoredLightValue[] takeSamples(WorldView world, ChunkSectionPos sectionPos, ChunkSection section) {
+    private static ColoredLightValue[] takeSamples(LevelAccessor world, SectionPos sectionPos, LevelChunkSection section) {
         ColoredLightValue[] samples = null;
         
-        var minPos = sectionPos.getMinPos();
-        var mutablePos = new BlockPos.Mutable();
+        var minPos = sectionPos.origin();
+        var mutablePos = new MutableBlockPos();
         
         for (int y = 0; y < 16; y++) {
             for (int z = 0; z < 16; z++) {
                 for (int x = 0; x < 16; x++) {
                     var state = section.getBlockState(x, y, z);
-                    int luminance = state.getLuminance();
+                    int luminance = state.getLightEmission();
                     if (luminance != 0) {
                         if (samples == null) {
                             samples = new ColoredLightValue[SAMPLE_COUNT * SAMPLE_COUNT * SAMPLE_COUNT];
                         }
                         
-                        mutablePos.set(minPos, x, y, z);
+                        mutablePos.setWithOffset(minPos, x, y, z);
                         
                         var color = BlockLightColors.lookup(world, mutablePos, state);
-                        addLightSourceSamples(samples, x, y, z, luminance, color.getX(), color.getY(), color.getZ());
+                        addLightSourceSamples(samples, x, y, z, luminance, color.x(), color.y(), color.z());
                     }
                 }
             }

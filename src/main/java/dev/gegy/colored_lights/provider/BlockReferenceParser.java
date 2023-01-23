@@ -8,7 +8,11 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.datafixers.util.Either;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 
 public final class BlockReferenceParser {
     @Nullable
@@ -41,8 +45,8 @@ public final class BlockReferenceParser {
     }
     
     private static BlockState parseBlockStateProperties(String blockReference, String propertiesReference, Block block) {
-        var state = block.getDefaultState();
-        var states = block.getStateManager();
+        var state = block.defaultBlockState();
+        var states = block.getStateDefinition();
         
         var properties = parseProperties(propertiesReference);
         for (var entry : properties.entrySet()) {
@@ -58,10 +62,10 @@ public final class BlockReferenceParser {
     }
     
     private static <T extends Comparable<T>> BlockState parseBlockStateProperty(BlockState state, Property<T> property, String valueReference) {
-        var value = property.parse(valueReference)
+        var value = property.getValue(valueReference)
                 .orElseThrow(() -> new JsonSyntaxException("Invalid property value " + valueReference + " for " + property + " on " + state.getBlock()));
         
-        return state.with(property, value);
+        return state.setValue(property, value);
     }
     
     private static Map<String, String> parseProperties(String reference) {
@@ -84,11 +88,10 @@ public final class BlockReferenceParser {
     
     @Nullable
     private static Block parseBlock(String reference) {
-        if (Identifier.isValid(reference)) {
-            var blockId = new Identifier(reference);
-            return Registry.BLOCK.getOrEmpty(blockId).orElse(null);
-        } else {
-            throw new JsonSyntaxException("Malformed block identifier: " + reference);
+        if (ResourceLocation.isValidResourceLocation(reference)) {
+            var blockId = new ResourceLocation(reference);
+            return Registry.BLOCK.get(blockId);
         }
+        throw new JsonSyntaxException("Malformed block identifier: " + reference);
     }
 }

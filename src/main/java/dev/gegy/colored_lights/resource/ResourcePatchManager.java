@@ -12,21 +12,23 @@ import org.jetbrains.annotations.NotNull;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import net.minecraft.resources.ResourceLocation;
+
 public final class ResourcePatchManager {
     public static final ResourcePatchManager INSTANCE = new ResourcePatchManager();
     
     private static final Logger LOGGER = LogManager.getLogger();
     
-    private final Multimap<Identifier, ResourcePatch> patches = HashMultimap.create();
+    private final Multimap<ResourceLocation, ResourcePatch> patches = HashMultimap.create();
     
     private ResourcePatchManager() {}
     
-    public void add(Identifier id, ResourcePatch patch) {
+    public void add(ResourceLocation id, ResourcePatch patch) {
         this.patches.put(id, patch);
     }
     
     @NotNull
-    public InputStream patch(Identifier id, InputStream input) {
+    public InputStream patch(ResourceLocation id, InputStream input) {
         var patches = this.patches.get(id);
         if (patches.isEmpty()) {
             return input;

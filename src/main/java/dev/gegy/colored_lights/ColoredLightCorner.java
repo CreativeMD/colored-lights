@@ -1,16 +1,17 @@
 package dev.gegy.colored_lights;
 
+import com.mojang.math.Vector3f;
+
 import dev.gegy.colored_lights.render.ColorConsumer;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.Mth;
 
 public final class ColoredLightCorner {
     private static final ColoredLightCorner[] BY_PACKED = new ColoredLightCorner[ColoredLightPacking.COLOR_COUNT];
     
     static {
         for (int packed = 0; packed < ColoredLightPacking.COLOR_COUNT; packed++) {
-            Vec3f color = ColoredLightPacking.unpack(packed);
-            BY_PACKED[packed] = new ColoredLightCorner(color.getX(), color.getY(), color.getZ(), packed);
+            Vector3f color = ColoredLightPacking.unpack(packed);
+            BY_PACKED[packed] = new ColoredLightCorner(color.x(), color.y(), color.z(), packed);
         }
     }
     
@@ -44,8 +45,7 @@ public final class ColoredLightCorner {
         float x1y1z0 = component.apply(corners[6]);
         float x1y1z1 = component.apply(corners[7]);
         
-        return MathHelper.lerp(x, MathHelper.lerp(y, MathHelper.lerp(z, x0y0z0, x0y0z1), MathHelper.lerp(z, x0y1z0, x0y1z1)), MathHelper
-                .lerp(y, MathHelper.lerp(z, x1y0z0, x1y0z1), MathHelper.lerp(z, x1y1z0, x1y1z1)));
+        return Mth.lerp(x, Mth.lerp(y, Mth.lerp(z, x0y0z0, x0y0z1), Mth.lerp(z, x0y1z0, x0y1z1)), Mth.lerp(y, Mth.lerp(z, x1y0z0, x1y0z1), Mth.lerp(z, x1y1z0, x1y1z1)));
     }
     
     public boolean isDefault() {

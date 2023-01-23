@@ -5,19 +5,19 @@ import org.jetbrains.annotations.Nullable;
 import dev.gegy.colored_lights.ColoredLightCorner;
 import dev.gegy.colored_lights.ColoredLightValue;
 import dev.gegy.colored_lights.chunk.ColoredLightChunkSection;
-import dev.gegy.colored_lights.mixin.render.chunk.BuiltChunkStorageAccess;
-import net.minecraft.client.render.BuiltChunkStorage;
-import net.minecraft.client.render.chunk.ChunkBuilder;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.chunk.Chunk;
+import dev.gegy.colored_lights.mixin.render.chunk.ViewAreaAccess;
+import net.minecraft.client.renderer.ViewArea;
+import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher.RenderChunk;
+import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkAccess;
 
 public final class ChunkLightColorUpdater {
-    private final BlockPos.Mutable chunkAccessPos = new BlockPos.Mutable();
+    private final MutableBlockPos chunkAccessPos = new MutableBlockPos();
     
-    public void rerenderChunk(WorldView world, BuiltChunkStorage chunks, int x, int y, int z) {
-        var chunkAccess = (BuiltChunkStorageAccess) chunks;
+    public void rerenderChunk(LevelAccessor world, ViewArea chunks, int x, int y, int z) {
+        var chunkAccess = (ViewAreaAccess) chunks;
         if (this.isChunkLightOutdated(world, chunkAccess, x, y, z)) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
@@ -35,7 +35,7 @@ public final class ChunkLightColorUpdater {
         }
     }
     
-    private boolean isChunkLightOutdated(WorldView world, BuiltChunkStorageAccess chunks, int x, int y, int z) {
+    private boolean isChunkLightOutdated(LevelAccessor world, ViewAreaAccess chunks, int x, int y, int z) {
         var chunk = world.getChunk(x, z);
         var section = getChunkSection(chunk, y);
         if (section == null) {
@@ -51,18 +51,18 @@ public final class ChunkLightColorUpdater {
     }
     
     @Nullable
-    private ChunkBuilder.BuiltChunk getBuiltChunk(BuiltChunkStorageAccess chunkAccess, int x, int y, int z) {
+    private RenderChunk getBuiltChunk(ViewAreaAccess chunkAccess, int x, int y, int z) {
         var pos = this.chunkAccessPos;
         pos.set(x << 4, y << 4, z << 4);
         return chunkAccess.getBuiltChunk(pos);
     }
     
-    public void updateChunk(WorldView world, ChunkBuilder.BuiltChunk builtChunk) {
+    public void updateChunk(LevelAccessor world, RenderChunk builtChunk) {
         var origin = builtChunk.getOrigin();
         this.updateChunk(world, builtChunk, origin.getX() >> 4, origin.getY() >> 4, origin.getZ() >> 4);
     }
     
-    private void updateChunk(WorldView world, ChunkBuilder.BuiltChunk builtChunk, int x, int y, int z) {
+    private void updateChunk(LevelAccessor world, RenderChunk builtChunk, int x, int y, int z) {
         var corners = new ColoredLightCorner[] { this.getLightColorAt(world, x, y, z), this.getLightColorAt(world, x, y, z + 1), this.getLightColorAt(world, x, y + 1, z), this
                 .getLightColorAt(world, x, y + 1, z + 1), this.getLightColorAt(world, x + 1, y, z), this
                         .getLightColorAt(world, x + 1, y, z + 1), this.getLightColorAt(world, x + 1, y + 1, z), this.getLightColorAt(world, x + 1, y + 1, z + 1) };
@@ -82,7 +82,7 @@ public final class ChunkLightColorUpdater {
         return false;
     }
     
-    private ColoredLightCorner getLightColorAt(WorldView world, int cx, int cy, int cz) {
+    private ColoredLightCorner getLightColorAt(LevelAccessor world, int cx, int cy, int cz) {
         var color = new ColoredLightValue();
         
         for (int dz = 0; dz <= 1; dz++) {
@@ -93,7 +93,7 @@ public final class ChunkLightColorUpdater {
                     int sy = cy - dy;
                     var section = getChunkSection(chunk, sy);
                     if (section != null) {
-                        var sectionPos = ChunkSectionPos.from(chunkPos, sy);
+                        var sectionPos = SectionPos.of(chunkPos, sy);
                         color.add(section.getColoredLightPoint(world, sectionPos, dx, dy, dz));
                     }
                 }
@@ -104,15 +104,15 @@ public final class ChunkLightColorUpdater {
     }
     
     @Nullable
-    private static ColoredLightChunkSection getChunkSection(WorldView world, int x, int y, int z) {
+    private static ColoredLightChunkSection getChunkSection(LevelAccessor world, int x, int y, int z) {
         var chunk = world.getChunk(x, z);
         return getChunkSection(chunk, y);
     }
     
     @Nullable
-    private static ColoredLightChunkSection getChunkSection(Chunk chunk, int y) {
-        var sections = chunk.getSectionArray();
-        int index = chunk.sectionCoordToIndex(y);
+    private static ColoredLightChunkSection getChunkSection(ChunkAccess chunk, int y) {
+        var sections = chunk.getSections();
+        int index = chunk.getSectionIndexFromSectionY(y);
         if (index >= 0 && index < sections.length) {
             return (ColoredLightChunkSection) sections[index];
         } else {

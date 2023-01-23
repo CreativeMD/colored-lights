@@ -8,10 +8,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import com.mojang.blaze3d.shaders.Program;
+import com.mojang.blaze3d.shaders.Shader;
+import com.mojang.blaze3d.shaders.Uniform;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import net.minecraft.client.gl.GlShader;
-import net.minecraft.client.gl.GlUniform;
 
 public final class ShaderPatch {
     private final Collection<PatchedUniform> uniforms;
@@ -28,7 +28,7 @@ public final class ShaderPatch {
         return new Builder();
     }
     
-    public void addUniforms(GlShader shader, BiConsumer<PatchedUniform, GlUniform> consumer) {
+    public void addUniforms(Shader shader, BiConsumer<PatchedUniform, Uniform> consumer) {
         for (var uniform : this.uniforms) {
             consumer.accept(uniform, uniform.toGlUniform(shader));
         }

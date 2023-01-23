@@ -6,17 +6,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
-import org.spongepowered.asm.util.perf.Profiler;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.math.Vector3f;
+import com.mojang.realmsclient.util.JsonUtils;
 
 import dev.gegy.colored_lights.ColoredLights;
 import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.profiling.ProfilerFiller;
 
 public final class BlockLightColorLoader implements SimpleResourceReloadListener<BlockLightColorMap> {
     private final Consumer<BlockLightColorMap> colorConsumer;
@@ -26,7 +26,7 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
     }
     
     @Override
-    public CompletableFuture<BlockLightColorMap> load(ResourceManager manager, Profiler profiler, Executor executor) {
+    public CompletableFuture<BlockLightColorMap> load(ResourceManager manager, ProfilerFiller profiler, Executor executor) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return loadColors(manager);
@@ -38,26 +38,26 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
     }
     
     @Override
-    public CompletableFuture<Void> apply(BlockLightColorMap colors, ResourceManager manager, Profiler profiler, Executor executor) {
+    public CompletableFuture<Void> apply(BlockLightColorMap colors, ResourceManager manager, ProfilerFiller profiler, Executor executor) {
         this.colorConsumer.accept(colors);
         return CompletableFuture.completedFuture(null);
     }
     
     @Override
-    public Identifier getFabricId() {
-        return new Identifier(ColoredLights.ID, "light_colors");
+    public ResourceLocation getFabricId() {
+        return new ResourceLocation(ColoredLights.ID, "light_colors");
     }
     
     private static BlockLightColorMap loadColors(ResourceManager manager) throws IOException {
         var baseColors = new BlockLightColorMap();
         var overrideColors = new BlockLightColorMap();
         
-        for (var resource : manager.getAllResources(new Identifier(ColoredLights.ID, "light_colors.json"))) {
+        for (var resource : manager.getResources(new ResourceLocation(ColoredLights.ID, "light_colors.json"))) {
             try (var input = resource.getInputStream()) {
                 var root = JsonParser.parseReader(new InputStreamReader(input)).getAsJsonObject();
                 
-                boolean replace = JsonHelper.getBoolean(root, "replace", false);
-                var mappings = JsonHelper.getObject(root, "colors");
+                boolean replace = JsonUtils.getBooleanOr("replace", root, false);
+                JsonObject mappings = root.getAsJsonObject("colors");
                 
                 if (replace) {
                     baseColors = new BlockLightColorMap();
@@ -66,7 +66,7 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
                     parseColorMappings(mappings, overrideColors);
                 }
             } catch (JsonSyntaxException e) {
-                ColoredLights.LOGGER.error("Failed to parse colored light mappings at {}", resource.getId(), e);
+                ColoredLights.LOGGER.error("Failed to parse colored light mappings at {}", resource.getSourceName(), e);
             }
         }
         
@@ -77,7 +77,7 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
     
     private static void parseColorMappings(JsonObject mappings, BlockLightColorMap colors) throws JsonSyntaxException {
         for (var entry : mappings.entrySet()) {
-            var color = parseColor(JsonHelper.asString(entry.getValue(), "color value"));
+            var color = parseColor(entry.getValue().getAsString());
             var result = BlockReferenceParser.parse(entry.getKey());
             if (result != null) {
                 result.ifLeft(block -> colors.put(block, color));
@@ -86,7 +86,7 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
         }
     }
     
-    private static Vec3f parseColor(String string) {
+    private static Vector3f parseColor(String string) {
         if (!string.startsWith("#")) {
             throw new JsonSyntaxException("Invalid color! Expected hex string in format #ffffff");
         }
@@ -96,7 +96,7 @@ public final class BlockLightColorLoader implements SimpleResourceReloadListener
             int red = (color >> 16) & 0xFF;
             int green = (color >> 8) & 0xFF;
             int blue = color & 0xFF;
-            return new Vec3f(red / 255.0F, green / 255.0F, blue / 255.0F);
+            return new Vector3f(red / 255.0F, green / 255.0F, blue / 255.0F);
         } catch (NumberFormatException e) {
             throw new JsonSyntaxException("Malformed hex string", e);
         }

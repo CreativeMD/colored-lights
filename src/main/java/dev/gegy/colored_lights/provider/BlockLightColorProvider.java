@@ -2,12 +2,13 @@ package dev.gegy.colored_lights.provider;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.mojang.math.Vector3f;
+
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.world.WorldView;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 
 public interface BlockLightColorProvider {
     @Nullable
-    Vec3f get(WorldView world, BlockPos pos, BlockState state);
+    Vector3f get(LevelAccessor world, BlockPos pos, BlockState state);
 }

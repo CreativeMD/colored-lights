@@ -11,13 +11,13 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import dev.gegy.colored_lights.ColoredLightValue;
 import dev.gegy.colored_lights.chunk.ChunkColoredLightSampler;
 import dev.gegy.colored_lights.chunk.ColoredLightChunkSection;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 
-@Mixin(ChunkSection.class)
-public abstract class ChunkSectionMixin implements ColoredLightChunkSection {
+@Mixin(LevelChunkSection.class)
+public abstract class LevelChunkSectionMixin implements ColoredLightChunkSection {
     @Shadow
     public abstract boolean isEmpty();
     
@@ -26,14 +26,14 @@ public abstract class ChunkSectionMixin implements ColoredLightChunkSection {
     
     @Inject(method = "setBlockState(IIILnet/minecraft/block/BlockState;Z)Lnet/minecraft/block/BlockState;",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getFluidState()Lnet/minecraft/fluid/FluidState;", ordinal = 0),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            locals = LocalCapture.CAPTURE_FAILHARD, require = 1)
     private void setBlockState(int x, int y, int z, BlockState state, boolean lock, CallbackInfoReturnable<BlockState> ci, BlockState lastState) {
-        if (lastState.getLuminance() != 0 || state.getLuminance() != 0) {
+        if (lastState.getLightEmission() != 0 || state.getLightEmission() != 0) {
             this.invalidateColoredLight();
         }
     }
     
-    @Inject(method = "calculateCounts", at = @At("HEAD"))
+    @Inject(method = "calculateCounts", at = @At("HEAD"), require = 1)
     private void calculateCounts(CallbackInfo ci) {
         this.invalidateColoredLight();
     }
@@ -44,14 +44,14 @@ public abstract class ChunkSectionMixin implements ColoredLightChunkSection {
     }
     
     @Override
-    public ColoredLightValue getColoredLightPoint(WorldView world, ChunkSectionPos sectionPos, int x, int y, int z) {
+    public ColoredLightValue getColoredLightPoint(LevelAccessor world, SectionPos sectionPos, int x, int y, int z) {
         if (this.isEmpty()) {
             return ColoredLightValue.NO;
         }
         
         var points = this.coloredLightPoints;
         if (points == null) {
-            this.coloredLightPoints = points = ChunkColoredLightSampler.sampleCorners(world, sectionPos, (ChunkSection) (Object) this);
+            this.coloredLightPoints = points = ChunkColoredLightSampler.sampleCorners(world, sectionPos, (LevelChunkSection) (Object) this);
         }
         
         return points[ChunkColoredLightSampler.octantIndex(x, y, z)];
